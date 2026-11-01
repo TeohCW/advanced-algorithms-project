@@ -96,6 +96,91 @@ class LinearProbingHashTable:
         print(f"\nRecords: {self.count}/{self.capacity}")
         print(f"Load factor: {load_factor:.2f}")
 
+
+def display_inventory(inventory):
+    """Format stored medicines for the pharmacy interface."""
+    header = (
+        f"{'Slot':<6} | {'ID':<8} | {'Medicine':<24} | "
+        f"{'Quantity':>8} | {'Price (RM)':>12}"
+    )
+
+    print("\n--- PHARMACY INVENTORY ---")
+    print(header)
+    print("-" * len(header))
+
+    for index, slot_content in enumerate(inventory.slots):
+        if slot_content is None:
+            continue
+
+        key, medicine = slot_content
+
+        # Shorten long names so the columns stay aligned.
+        name = medicine.name
+        if len(name) > 24:
+            name = name[:21] + "..."
+
+        ringgit, cents = divmod(medicine.price_cents, 100)
+        price = f"{ringgit}.{cents:02d}"
+
+        print(
+            f"{index:<6} | {key:<8} | {name:<24} | "
+            f"{medicine.quantity:>8} | {price:>12}"
+        )
+
+    if inventory.count == 0:
+        print("No medicines stored.")
+
+    print("-" * len(header))
+    print(f"Total products: {inventory.count}")
+    print(f"Capacity: {inventory.capacity}")
+    print(f"Load factor: {inventory.count / inventory.capacity:.2f}")
+
+
+def add_medicine(inventory):
+    """Read user input and insert a medicine."""
+    print("\n--- ADD MEDICINE ---")
+
+    try:
+        product_id = int(input("Product ID: "))
+        name = input("Medicine name: ")
+        quantity = int(input("Quantity: "))
+        price_cents = int(input("Price in cents (e.g. 550 = RM5.50): "))
+
+        # The Medicine constructor validates the supplied values.
+        medicine = Medicine(product_id, name, quantity, price_cents)
+
+        # The hash table checks for duplicates and available space.
+        index = inventory.insert(product_id, medicine)
+        print(f"Medicine added successfully at slot {index}.")
+
+    except ValueError as error:
+        print(f"Cannot add medicine: {error}")
+    except OverflowError as error:
+        print(f"Cannot add medicine: {error}")
+
+
+def search_medicine(inventory):
+    """Search for a medicine using its product ID."""
+    print("\n--- SEARCH MEDICINE ---")
+
+    try:
+        product_id = int(input("Enter product ID: "))
+
+        if product_id <= 0:
+            raise ValueError("Product ID must be a positive integer.")
+
+        medicine = inventory.search(product_id)
+
+        if medicine is None:
+            print(f"Product {product_id} was not found.")
+        else:
+            print("Medicine found:")
+            print(medicine)
+
+    except ValueError as error:
+        print(f"Cannot search: {error}")
+
+
 def main():
     inventory = LinearProbingHashTable(capacity=11)
 
@@ -106,29 +191,32 @@ def main():
         Medicine(123, "Vitamin C", 40, 1250),
     ]
 
-    print("--- INSERTING MEDICINES ---")
-
     for medicine in medicines_arr:
-        home_index = inventory.hash_function(medicine.id)
-        actual_index = inventory.insert(medicine.id, medicine)
+        inventory.insert(medicine.id, medicine)
 
-        print(
-            f"{medicine.id}: "
-            f"home slot = {home_index}, "
-            f"stored slot = {actual_index}"
-        )
+    while True:
+        print("\n===== PHARMACY INVENTORY SYSTEM =====")
+        print("1. Add medicine")
+        print("2. Search medicine")
+        print("3. Display inventory")
+        print("4. Display hash table slots")
+        print("0. Exit")
 
-    inventory.display()
+        choice = input("Select an option: ").strip()
 
-    print("\n--- SEARCHING ---")
-
-    for id in [112, 999]:
-        result = inventory.search(id)
-
-        if result is None:
-            print(f"Product {id}: not found.")
+        if choice == "1":
+            add_medicine(inventory)
+        elif choice == "2":
+            search_medicine(inventory)
+        elif choice == "3":
+            display_inventory(inventory)
+        elif choice == "4":
+            inventory.display()
+        elif choice == "0":
+            print("Exiting...")
+            break
         else:
-            print(f"Product {id}: {result}")
+            print("Invalid option. Please enter 0, 1, 2, 3 or 4.")
 
 
 if __name__ == "__main__":
