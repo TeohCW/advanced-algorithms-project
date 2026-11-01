@@ -27,7 +27,7 @@ class Medicine:
             f"Price: RM{ringgit}.{cents:02d}"
         )
 
-class LinerProbingHashTable:
+class LinearProbingHashTable:
     """Stores integer keys and associated values using linear probing."""
 
     def __init__(self, capacity=11):
@@ -38,60 +38,98 @@ class LinerProbingHashTable:
         self.slots = [None] * capacity
         self.count = 0
 
-        def hash_function(self, key):
-            if type(key) is not int:
-                raise TypeError("This hash table requires integer keys.")
+    def hash_function(self, key):
+        if type(key) is not int:
+            raise TypeError("This hash table requires integer keys.")
 
-            return key % self.capacity
+        return key % self.capacity
 
-        def insert(self, key, value):
-            """Insert a new key-value pair and return its slot index."""
-            start_index = self.hash_function(key)
+    def insert(self, key, value):
+        """Insert a new key-value pair and return its slot index."""
+        start_index = self.hash_function(key)
 
-            # Check at most every slot once to avoid an infinite loop.
-            for step in range(self.capacity):
-                index = (start_index + step) % self.capacity
-                slot_content = self.slots[index]
+        # Check at most every slot once to avoid an infinite loop.
+        for step in range(self.capacity):
+            index = (start_index + step) % self.capacity
+            slot_content = self.slots[index]
 
-                if slot_content is None:
-                    self.slots[index] = (key, value)
-                    self.count += 1
-                    return index
+            if slot_content is None:
+                self.slots[index] = (key, value)
+                self.count += 1
+                return index
 
-                if slot_content[0] == key:
-                    raise ValueError(f"Key {key} already exists.")
+            if slot_content[0] == key:
+                raise ValueError(f"Key {key} already exists.")
 
-            raise OverflowError("Hash table is full.")
+        raise OverflowError("Hash table is full.")
 
-        def search(self, key):
-            """Return the associated value, or None if the key is absent."""
-            start_index = self.hash_function(key)
+    def search(self, key):
+        """Return the associated value, or None if the key is absent."""
+        start_index = self.hash_function(key)
 
-            for step in range(self.capacity):
-                index = (start_index + step) % self.capacity
-                slot_content = self.slots[index]
+        for step in range(self.capacity):
+            index = (start_index + step) % self.capacity
+            slot_content = self.slots[index]
 
-                # Without deletion, an empty slot ends the search.
-                if slot_content is None:
-                    return None
+            # Without deletion, an empty slot ends the search.
+            if slot_content is None:
+                return None
 
-                if slot_content[0] == key:
-                    return slot_content[1]
+            if slot_content[0] == key:
+                return slot_content[1]
 
-            return None
+        return None
 
-        def display(self):
-            """Display the slots so collisions can be inspected."""
+    def display(self):
+        """Display the slots so collisions can be inspected."""
 
-            print("\n--- HASH TABLE ---")
+        print("\n--- HASH TABLE ---")
 
-            for index, slot_content in enumerate(self.slots):
-                if slot_content is None:
-                    print(f"Slot {index:2}: EMPTY")
-                else:
-                    key, value = slot_content
-                    print(f"Slot {index:2}: {value}")
+        for index, slot_content in enumerate(self.slots):
+            if slot_content is None:
+                print(f"Slot {index:2}: EMPTY")
+            else:
+                key, value = slot_content
+                print(f"Slot {index:2}: {value}")
 
-            load_factor = self.count / self.capacity
-            print(f"\nRecords: {self.count}/{self.capacity}")
-            print(f"Load factor: {load_factor:.2f}")
+        load_factor = self.count / self.capacity
+        print(f"\nRecords: {self.count}/{self.capacity}")
+        print(f"Load factor: {load_factor:.2f}")
+
+def main():
+    inventory = LinearProbingHashTable(capacity=11)
+
+    # These IDs deliberately collide to demonstrate linear probing.
+    medicines_arr = [
+        Medicine(101, "Paracetamol", 50, 550),
+        Medicine(112, "Cetirizine", 30, 800),
+        Medicine(123, "Vitamin C", 40, 1250),
+    ]
+
+    print("--- INSERTING MEDICINES ---")
+
+    for medicine in medicines_arr:
+        home_index = inventory.hash_function(medicine.id)
+        actual_index = inventory.insert(medicine.id, medicine)
+
+        print(
+            f"{medicine.id}: "
+            f"home slot = {home_index}, "
+            f"stored slot = {actual_index}"
+        )
+
+    inventory.display()
+
+    print("\n--- SEARCHING ---")
+
+    for id in [112, 999]:
+        result = inventory.search(id)
+
+        if result is None:
+            print(f"Product {id}: not found.")
+        else:
+            print(f"Product {id}: {result}")
+
+
+if __name__ == "__main__":
+    main()
