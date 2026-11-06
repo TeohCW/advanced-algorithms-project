@@ -108,6 +108,20 @@ class DirectedGraph:
 
         return False
 
+    def removeEdge(self, source, destination):
+        """Remove a directed edge if it exists."""
+        if source not in self.adjacency_list:
+            raise ValueError("Source vertex does not exist.")
+
+        if destination not in self.adjacency_list:
+            raise ValueError("Destination vertex does not exist.")
+
+        if destination not in self.adjacency_list[source]:
+            return False
+
+        self.adjacency_list[source].remove(destination)
+        return True
+
 
 def display_course_list(course_catalogue):
     """Display the codes and names of all courses."""
@@ -266,6 +280,50 @@ def add_prerequisite(course_catalogue, graph):
     )
 
 
+def remove_prerequisite(course_catalogue, graph):
+    """Remove a prerequisite connection after confirmation."""
+    print("\n--- REMOVE PREREQUISITE ---")
+
+    course_code = input(
+        "Course whose prerequisite you want to remove: "
+    ).strip().upper()
+
+    prerequisite_code = input(
+        "Prerequisite course to remove: "
+    ).strip().upper()
+
+    if course_code not in course_catalogue:
+        print(f"Course '{course_code}' was not found.")
+        return
+
+    if prerequisite_code not in course_catalogue:
+        print(f"Course '{prerequisite_code}' was not found.")
+        return
+
+    outgoing = graph.listOutgoingAdjacentVertex(prerequisite_code)
+
+    if course_code not in outgoing:
+        print("This prerequisite connection does not exist.")
+        return
+
+    confirmation = input(
+        f"Remove {prerequisite_code} as a prerequisite "
+        f"of {course_code}? Enter y to confirm: "
+    ).strip().lower()
+
+    if confirmation != "y":
+        print("Removal cancelled.")
+        return
+
+    if graph.removeEdge(prerequisite_code, course_code):
+        print(
+            f"{prerequisite_code} is no longer a prerequisite "
+            f"of {course_code}."
+        )
+    else:
+        print("This prerequisite connection does not exist.")
+
+
 def main():
     courses = [
         Course("CS101", "Introduction to Programming", 3, "core"),
@@ -303,6 +361,7 @@ def main():
         print("4. View courses unlocked")
         print("5. Add course")
         print("6. Add prerequisite")
+        print("7. Remove prerequisite")
         print("0. Exit")
 
         choice = input("Select an option: ").strip()
@@ -319,11 +378,13 @@ def main():
             add_course(course_catalogue, graph)
         elif choice == "6":
             add_prerequisite(course_catalogue, graph)
+        elif choice == "7":
+            remove_prerequisite(course_catalogue, graph)
         elif choice == "0":
             print("Exiting...")
             break
         else:
-            print("Invalid option. Please enter a number from 0 to 6.")
+            print("Invalid option. Please enter a number from 0 to 7.")
 
 
 if __name__ == "__main__":
