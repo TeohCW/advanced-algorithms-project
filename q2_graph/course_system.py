@@ -82,24 +82,58 @@ class DirectedGraph:
 
 
 def main():
+    courses = [
+        Course("CS101", "Introduction to Programming", 3, "core"),
+        Course("CS102", "Object-Oriented Programming", 3, "core"),
+        Course("CS103", "Discrete Mathematics", 3, "core"),
+        Course("CS201", "Data Structures", 3, "core"),
+        Course("CS202", "Advanced Algorithms", 3, "core"),
+        Course("CS203", "Web Development", 3, "elective"),
+    ]
+
+    # Map each course code to its Course object.
+    course_catalogue = {}
     graph = DirectedGraph()
 
-    graph.addVertex("CS101")
-    graph.addVertex("CS102")
-    graph.addVertex("CS201")
+    for course in courses:
+        course_catalogue[course.course_code] = course
+        graph.addVertex(course.course_code)
 
-    # Prerequisite -> dependent course
-    graph.addEdge("CS101", "CS102")
-    graph.addEdge("CS102", "CS201")
+    # Each edge points from a prerequisite to a dependent course.
+    prerequisites = [
+        ("CS101", "CS102"),
+        ("CS102", "CS201"),
+        ("CS103", "CS201"),
+        ("CS201", "CS202"),
+        ("CS103", "CS202"),
+        ("CS102", "CS203"),
+    ]
 
-    print("--- GRAPH STRUCTURE ---")
-    print(graph.adjacency_list)
+    for prerequisite, dependent in prerequisites:
+        graph.addEdge(prerequisite, dependent)
 
-    print("\nPrerequisites of CS102:")
-    print(graph.listIncomingAdjacentVertex("CS102"))
+    print("--- ALL COURSES ---")
+    for course in course_catalogue.values():
+        print(f"{course.course_code}: {course.course_name}")
 
-    print("\nCourses that CS102 is a prerequisite for:")
-    print(graph.listOutgoingAdjacentVertex("CS102"))
+    selected_code = "CS201"
+
+    print("\n--- SELECTED COURSE DETAILS ---")
+    print(course_catalogue[selected_code])
+
+    print("\n--- DIRECT PREREQUISITES ---")
+    incoming = graph.listIncomingAdjacentVertex(selected_code)
+
+    for code in incoming:
+        course = course_catalogue[code]
+        print(f"{code}: {course.course_name}")
+
+    print("\n--- COURSES IT IS A PREREQUISITE FOR ---")
+    outgoing = graph.listOutgoingAdjacentVertex(selected_code)
+
+    for code in outgoing:
+        course = course_catalogue[code]
+        print(f"{code}: {course.course_name}")
 
 
 if __name__ == "__main__":
