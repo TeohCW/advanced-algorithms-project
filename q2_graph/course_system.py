@@ -34,16 +34,72 @@ class Course:
         )
 
 
-def main():
-    course = Course(
-        "cs101",
-        "Introduction to Programming",
-        3,
-        "Core"
-    )
+class DirectedGraph:
+    """A reusable unweighted directed graph."""
 
-    print("--- COURSE DETAILS ---")
-    print(course)
+    def __init__(self):
+        self.adjacency_list = {}
+
+    def addVertex(self, vertex):
+        """Add a vertex with no outgoing edges."""
+        if vertex in self.adjacency_list:
+            raise ValueError("Vertex already exists.")
+
+        self.adjacency_list[vertex] = []
+
+    def addEdge(self, source, destination):
+        """Add a directed edge from source to destination."""
+        if source not in self.adjacency_list:
+            raise ValueError("Source vertex does not exist.")
+
+        if destination not in self.adjacency_list:
+            raise ValueError("Destination vertex does not exist.")
+
+        if destination in self.adjacency_list[source]:
+            raise ValueError("Edge already exists.")
+
+        self.adjacency_list[source].append(destination)
+
+    def listIncomingAdjacentVertex(self, vertex):
+        """Return all vertices with an edge pointing to this vertex."""
+        if vertex not in self.adjacency_list:
+            raise ValueError("Vertex does not exist.")
+
+        incoming = []
+
+        for source, neighbours in self.adjacency_list.items():
+            if vertex in neighbours:
+                incoming.append(source)
+
+        return incoming
+
+    def listOutgoingAdjacentVertex(self, vertex):
+        """Return all vertices this vertex points to."""
+        if vertex not in self.adjacency_list:
+            raise ValueError("Vertex does not exist.")
+
+        return self.adjacency_list[vertex].copy()
+
+
+def main():
+    graph = DirectedGraph()
+
+    graph.addVertex("CS101")
+    graph.addVertex("CS102")
+    graph.addVertex("CS201")
+
+    # Prerequisite -> dependent course
+    graph.addEdge("CS101", "CS102")
+    graph.addEdge("CS102", "CS201")
+
+    print("--- GRAPH STRUCTURE ---")
+    print(graph.adjacency_list)
+
+    print("\nPrerequisites of CS102:")
+    print(graph.listIncomingAdjacentVertex("CS102"))
+
+    print("\nCourses that CS102 is a prerequisite for:")
+    print(graph.listOutgoingAdjacentVertex("CS102"))
 
 
 if __name__ == "__main__":
