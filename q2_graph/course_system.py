@@ -80,6 +80,34 @@ class DirectedGraph:
 
         return self.adjacency_list[vertex].copy()
 
+    def has_path(self, source, destination):
+        """Return True if a directed path connects source to destination."""
+        if source not in self.adjacency_list:
+            raise ValueError("Source vertex does not exist.")
+
+        if destination not in self.adjacency_list:
+            raise ValueError("Destination vertex does not exist.")
+
+        stack = [source]
+        visited = set()
+
+        while stack:
+            current = stack.pop()
+
+            if current == destination:
+                return True
+
+            if current in visited:
+                continue
+
+            visited.add(current)
+
+            for neighbour in self.adjacency_list[current]:
+                if neighbour not in visited:
+                    stack.append(neighbour)
+
+        return False
+
 
 def display_course_list(course_catalogue):
     """Display the codes and names of all courses."""
@@ -194,6 +222,50 @@ def add_course(course_catalogue, graph):
         print(f"Cannot add course: {error}")
 
 
+def add_prerequisite(course_catalogue, graph):
+    """Add a prerequisite without creating a circular dependency."""
+    print("\n--- ADD PREREQUISITE ---")
+
+    course_code = input(
+        "Course that requires a prerequisite: "
+    ).strip().upper()
+
+    prerequisite_code = input(
+        "Course to use as its prerequisite: "
+    ).strip().upper()
+
+    if course_code not in course_catalogue:
+        print(f"Course '{course_code}' was not found.")
+        return
+
+    if prerequisite_code not in course_catalogue:
+        print(f"Course '{prerequisite_code}' was not found.")
+        return
+
+    if course_code == prerequisite_code:
+        print("A course cannot be its own prerequisite.")
+        return
+
+    outgoing = graph.listOutgoingAdjacentVertex(prerequisite_code)
+
+    if course_code in outgoing:
+        print("This prerequisite connection already exists.")
+        return
+
+    # Proposed edge: prerequisite -> course.
+    # A path in the opposite direction would complete a cycle.
+    if graph.has_path(course_code, prerequisite_code):
+        print("Cannot add prerequisite: it would create a cycle.")
+        return
+
+    graph.addEdge(prerequisite_code, course_code)
+
+    print(
+        f"{prerequisite_code} is now a prerequisite "
+        f"of {course_code}."
+    )
+
+
 def main():
     courses = [
         Course("CS101", "Introduction to Programming", 3, "core"),
@@ -230,6 +302,7 @@ def main():
         print("3. View direct prerequisites")
         print("4. View courses unlocked")
         print("5. Add course")
+        print("6. Add prerequisite")
         print("0. Exit")
 
         choice = input("Select an option: ").strip()
@@ -244,11 +317,13 @@ def main():
             display_unlocked_courses(course_catalogue, graph)
         elif choice == "5":
             add_course(course_catalogue, graph)
+        elif choice == "6":
+            add_prerequisite(course_catalogue, graph)
         elif choice == "0":
             print("Exiting...")
             break
         else:
-            print("Invalid option. Please enter a number from 0 to 5.")
+            print("Invalid option. Please enter a number from 0 to 6.")
 
 
 if __name__ == "__main__":
