@@ -158,6 +158,42 @@ def display_unlocked_courses(course_catalogue, graph):
     print("Other prerequisites may also need to be completed.")
 
 
+def add_course(course_catalogue, graph):
+    """Add a course to both the catalogue and graph."""
+    print("\n--- ADD COURSE ---")
+
+    if len(course_catalogue) >= 10:
+        print("Cannot add course: the maximum is 10 courses.")
+        return
+
+    try:
+        code = input("Course code: ").strip().upper()
+
+        if code in course_catalogue:
+            print(f"Course '{code}' already exists.")
+            return
+
+        name = input("Course name: ")
+        credit_hours = int(input("Credit hours: "))
+        level = input("Level (core/elective): ")
+
+        # Validate all details before changing either structure.
+        course = Course(code, name, credit_hours, level)
+
+        # Create the graph vertex and store its course information.
+        graph.addVertex(course.course_code)
+        course_catalogue[course.course_code] = course
+
+        print(
+            f"Course added successfully: "
+            f"{course.course_code} - {course.course_name}"
+        )
+        print("The new course has no prerequisite connections yet.")
+
+    except ValueError as error:
+        print(f"Cannot add course: {error}")
+
+
 def main():
     courses = [
         Course("CS101", "Introduction to Programming", 3, "core"),
@@ -193,6 +229,7 @@ def main():
         print("2. View full course details")
         print("3. View direct prerequisites")
         print("4. View courses unlocked")
+        print("5. Add course")
         print("0. Exit")
 
         choice = input("Select an option: ").strip()
@@ -205,11 +242,13 @@ def main():
             display_prerequisites(course_catalogue, graph)
         elif choice == "4":
             display_unlocked_courses(course_catalogue, graph)
+        elif choice == "5":
+            add_course(course_catalogue, graph)
         elif choice == "0":
             print("Exiting...")
             break
         else:
-            print("Invalid option. Please enter a number from 0 to 4.")
+            print("Invalid option. Please enter a number from 0 to 5.")
 
 
 if __name__ == "__main__":
