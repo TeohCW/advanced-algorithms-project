@@ -81,6 +81,83 @@ class DirectedGraph:
         return self.adjacency_list[vertex].copy()
 
 
+def display_course_list(course_catalogue):
+    """Display the codes and names of all courses."""
+    print("\n--- ALL COURSES ---")
+
+    if not course_catalogue:
+        print("No courses available.")
+        return
+
+    for course in course_catalogue.values():
+        print(f"{course.course_code}: {course.course_name}")
+
+
+def select_course(course_catalogue):
+    """Read a course code and return its object, or None if absent."""
+    code = input("Enter course code: ").strip().upper()
+
+    course = course_catalogue.get(code)
+
+    if course is None:
+        print(f"Course '{code}' was not found.")
+
+    return course
+
+
+def display_course_details(course_catalogue):
+    """Display full details regardless of core/elective status."""
+    print("\n--- COURSE DETAILS ---")
+    course = select_course(course_catalogue)
+
+    if course is not None:
+        print(course)
+
+
+def display_prerequisites(course_catalogue, graph):
+    """Display the selected course's direct prerequisites."""
+    print("\n--- DIRECT PREREQUISITES ---")
+    course = select_course(course_catalogue)
+
+    if course is None:
+        return
+
+    incoming = graph.listIncomingAdjacentVertex(course.course_code)
+
+    print(f"\nPrerequisites for {course.course_name}:")
+
+    if not incoming:
+        print("This course has no direct prerequisites.")
+        return
+
+    for code in incoming:
+        prerequisite = course_catalogue[code]
+        print(f"{code}: {prerequisite.course_name}")
+
+
+def display_unlocked_courses(course_catalogue, graph):
+    """Display courses for which the selected course is a prerequisite."""
+    print("\n--- COURSES THIS COURSE UNLOCKS ---")
+    course = select_course(course_catalogue)
+
+    if course is None:
+        return
+
+    outgoing = graph.listOutgoingAdjacentVertex(course.course_code)
+
+    print(f"\nCourses requiring {course.course_name}:")
+
+    if not outgoing:
+        print("This course is not a direct prerequisite for any course.")
+        return
+
+    for code in outgoing:
+        dependent = course_catalogue[code]
+        print(f"{code}: {dependent.course_name}")
+
+    print("Other prerequisites may also need to be completed.")
+
+
 def main():
     courses = [
         Course("CS101", "Introduction to Programming", 3, "core"),
@@ -91,7 +168,6 @@ def main():
         Course("CS203", "Web Development", 3, "elective"),
     ]
 
-    # Map each course code to its Course object.
     course_catalogue = {}
     graph = DirectedGraph()
 
@@ -99,7 +175,6 @@ def main():
         course_catalogue[course.course_code] = course
         graph.addVertex(course.course_code)
 
-    # Each edge points from a prerequisite to a dependent course.
     prerequisites = [
         ("CS101", "CS102"),
         ("CS102", "CS201"),
@@ -112,28 +187,29 @@ def main():
     for prerequisite, dependent in prerequisites:
         graph.addEdge(prerequisite, dependent)
 
-    print("--- ALL COURSES ---")
-    for course in course_catalogue.values():
-        print(f"{course.course_code}: {course.course_name}")
+    while True:
+        print("\n===== COURSE PREREQUISITE SYSTEM =====")
+        print("1. List all courses")
+        print("2. View full course details")
+        print("3. View direct prerequisites")
+        print("4. View courses unlocked")
+        print("0. Exit")
 
-    selected_code = "CS201"
+        choice = input("Select an option: ").strip()
 
-    print("\n--- SELECTED COURSE DETAILS ---")
-    print(course_catalogue[selected_code])
-
-    print("\n--- DIRECT PREREQUISITES ---")
-    incoming = graph.listIncomingAdjacentVertex(selected_code)
-
-    for code in incoming:
-        course = course_catalogue[code]
-        print(f"{code}: {course.course_name}")
-
-    print("\n--- COURSES IT IS A PREREQUISITE FOR ---")
-    outgoing = graph.listOutgoingAdjacentVertex(selected_code)
-
-    for code in outgoing:
-        course = course_catalogue[code]
-        print(f"{code}: {course.course_name}")
+        if choice == "1":
+            display_course_list(course_catalogue)
+        elif choice == "2":
+            display_course_details(course_catalogue)
+        elif choice == "3":
+            display_prerequisites(course_catalogue, graph)
+        elif choice == "4":
+            display_unlocked_courses(course_catalogue, graph)
+        elif choice == "0":
+            print("Exiting...")
+            break
+        else:
+            print("Invalid option. Please enter a number from 0 to 4.")
 
 
 if __name__ == "__main__":
