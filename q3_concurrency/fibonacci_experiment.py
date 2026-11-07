@@ -15,7 +15,16 @@ def fibonacci(n):
     return current
 
 
-def run_sequential(positions, rounds=10):
+def validate_results(results, expected_results):
+    """Check whether the calculated results match the expected values."""
+    if results != expected_results:
+        raise ValueError(
+            f"Incorrect Fibonacci results. "
+            f"Expected {expected_results}, got {results}."
+        )
+
+
+def run_sequential(positions, expected_results, rounds=10):
     """Measure the total calculation time for each sequential round."""
     timings = []
 
@@ -32,6 +41,8 @@ def run_sequential(positions, rounds=10):
 
         elapsed_time = end_time - start_time
         timings.append(elapsed_time)
+
+        validate_results(results, expected_results)
 
         print(f"Round {round_number:2}: {elapsed_time:,} ns")
 
@@ -53,7 +64,7 @@ def fibonacci_worker(n, index, results, start_times, end_times):
     results[index] = result
 
 
-def run_multithreaded(positions, rounds=10):
+def run_multithreaded(positions, expected_results, rounds=10):
     """Measure the time from the earliest worker start to the latest finish."""
     timings = []
 
@@ -81,6 +92,8 @@ def run_multithreaded(positions, rounds=10):
         elapsed_time = max(end_times) - min(start_times)
         timings.append(elapsed_time)
 
+        validate_results(results, expected_results)
+
         print(f"Round {round_number:2}: {elapsed_time:,} ns")
 
     average_time = sum(timings) / len(timings)
@@ -91,8 +104,36 @@ def run_multithreaded(positions, rounds=10):
     return timings
 
 
+def display_comparison(sequential_timings, multithreaded_timings):
+    """Display the average execution time for both methods."""
+    sequential_average = (
+        sum(sequential_timings) / len(sequential_timings)
+    )
+    multithreaded_average = (
+        sum(multithreaded_timings) / len(multithreaded_timings)
+    )
+
+    print("\n--- PERFORMANCE COMPARISON ---")
+    print(f"{'Method':<20}{'Average time (ns)':>20}")
+    print("-" * 40)
+    print(f"{'Sequential':<20}{sequential_average:>20,.2f}")
+    print(f"{'Multithreaded':<20}{multithreaded_average:>20,.2f}")
+
+    if sequential_average > 0:
+        ratio = multithreaded_average / sequential_average
+        print(f"\nMultithreaded / sequential time ratio: {ratio:.2f}")
+
+    if multithreaded_average > sequential_average:
+        print("Sequential execution was faster in this experiment.")
+    elif multithreaded_average < sequential_average:
+        print("Multithreaded execution was faster in this experiment.")
+    else:
+        print("Both methods had the same average execution time.")
+
+
 def main():
     positions = [35, 38, 40]
+    expected_results = [9227465, 39088169, 102334155]
 
     print("--- FIBONACCI RESULTS ---")
 
@@ -100,8 +141,19 @@ def main():
         result = fibonacci(n)
         print(f"F({n}) = {result}")
 
-    run_sequential(positions)
-    run_multithreaded(positions)
+    sequential_timings = run_sequential(
+        positions, expected_results
+    )
+
+    multithreaded_timings = run_multithreaded(
+        positions, expected_results
+    )
+
+    print("\nAll rounds produced the expected Fibonacci results.")
+
+    display_comparison(
+        sequential_timings, multithreaded_timings
+    )
 
 
 if __name__ == "__main__":
